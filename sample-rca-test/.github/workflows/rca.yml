@@ -1,0 +1,34 @@
+name: Sample RCA test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests and save logs
+        run: npm test 2>&1 | tee logs.txt
+
+  rca:
+    needs: build
+    if: failure()
+    uses: itsmeteja9/Agent-POC/.github/workflows/rca-reusable.yml@3e6811dba9cd949048cec482ab25ac11251aaad5
+    with:
+      tool_repo: itsmeteja9/Agent-POC
+      log_file: logs.txt
+      artifact_name: rca-report
+      python_version: "3.10"
