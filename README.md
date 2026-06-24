@@ -51,7 +51,7 @@ The RCA agent automatically runs on pipeline failures:
 
 - name: 📦 Upload RCA Artifact
   if: failure()
-  uses: actions/upload-artifact@v3
+  uses: actions/upload-artifact@v4
   with:
     name: rca-report
     path: rca_output.txt

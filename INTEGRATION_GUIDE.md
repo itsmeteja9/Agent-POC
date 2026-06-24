@@ -79,12 +79,12 @@ runs-on: ubuntu-latest
 ```yaml
 - name: 📦 Upload RCA Artifact
   if: failure()
-  uses: actions/upload-artifact@v3
+  uses: actions/upload-artifact@v4
   with:
     name: rca-report
     path: rca_output.txt
 ```
-- Stores RCA report as artifact for 90 days
+- Stores RCA report as artifact for 30 days
 
 ## Step 3: Customize for Your Workflows
 
@@ -102,7 +102,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
@@ -115,6 +115,82 @@ jobs:
     if: failure()
     uses: ./.github/workflows/rca.yml
 ```
+
+### Use a central reusable RCA workflow
+
+If you have many repos, keep the RCA logic in one central repo and call it from each project.
+
+**In your central `Agent-POC` repo:**
+```yaml
+# .github/workflows/rca-reusable.yml
+name: RCA Reusable Workflow
+
+on:
+  workflow_call:
+    inputs:
+      log_file:
+        description: "Path to the log file to analyze"
+        required: false
+        default: "logs.txt"
+        type: string
+      artifact_name:
+        description: "Artifact name for RCA report"
+        required: false
+        default: "rca-report"
+        type: string
+      python_version:
+        description: "Python version to use"
+        required: false
+        default: "3.10"
+        type: string
+
+jobs:
+  rca:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: Run RCA analysis
+        run: |
+          python rca/run_rca.py --log-file "${{ inputs.log_file }}" | tee rca_output.txt
+      - name: Upload RCA report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: rca_output.txt
+          retention-days: 30
+```
+
+**In each repo that uses the RCA agent:**
+```yaml
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: pytest tests/ > logs.txt 2>&1
+
+  rca:
+    needs: build
+    if: failure()
+    uses: your-github-username/Agent-POC/.github/workflows/rca-reusable.yml@main
+    with:
+      tool_repo: your-github-username/Agent-POC
+      log_file: logs.txt
+      artifact_name: rca-report
+```
+
+> The caller repo does not need a local `rca/` directory if using the central reusable RCA workflow. The reusable workflow checks out the RCA tool from the central repo specified by `tool_repo`.
 
 ### Capture Real Build Logs
 
@@ -129,7 +205,7 @@ Replace the simulated failure in `rca.yml` with actual logs:
   
 - name: 📦 Upload RCA Artifact
   if: failure()
-  uses: actions/upload-artifact@v3
+  uses: actions/upload-artifact@v4
   with:
     name: rca-report
     path: rca_output.txt
