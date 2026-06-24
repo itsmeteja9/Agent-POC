@@ -1,0 +1,43 @@
+name: Auto RCA Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  rca-job:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: ✅ Checkout code
+      uses: actions/checkout@v3
+
+    - name: ✅ Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: ❌ Simulate Pipeline Failure
+      id: build
+      run: |
+        echo "[Pipeline] Start build" > logs.txt
+        echo "[Pipeline] Running tests" >> logs.txt
+        echo "ERROR: Test suite failed: 12 failed, 5 passed" >> logs.txt
+        echo "[Pipeline] Build failed" >> logs.txt
+        echo "[Pipeline] Deployment aborted" >> logs.txt
+
+        cat logs.txt
+        exit 1
+
+    - name: 🚀 Run RCA Agent
+      if: failure()
+      run: |
+        python rca/run_rca.py | tee rca_output.txt
+
+    - name: 📦 Upload RCA Artifact
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: rca-report
+        path: rca_output.txt
