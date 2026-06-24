@@ -1,0 +1,5 @@
+[Pipeline] Start build
+[Pipeline] Running tests
+ERROR: Test suite failed: 12 failed, 5 passed
+[Pipeline] Build failed
+[Pipeline] Deployment aborted

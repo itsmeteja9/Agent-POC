@@ -2,12 +2,14 @@ name: Auto RCA Pipeline
 
 on:
   push:
+    branches: [ "main", "develop" ]
+  pull_request:
     branches: [ "main" ]
 
 jobs:
   rca-job:
     runs-on: ubuntu-latest
-
+    
     steps:
 
     - name: ✅ Checkout code
@@ -20,6 +22,7 @@ jobs:
 
     - name: ❌ Simulate Pipeline Failure
       id: build
+      continue-on-error: true
       run: |
         echo "[Pipeline] Start build" > logs.txt
         echo "[Pipeline] Running tests" >> logs.txt
@@ -32,8 +35,10 @@ jobs:
 
     - name: 🚀 Run RCA Agent
       if: failure()
+      id: rca
       run: |
         python rca/run_rca.py | tee rca_output.txt
+        echo "RCA analysis completed"
 
     - name: 📦 Upload RCA Artifact
       if: failure()
@@ -41,3 +46,23 @@ jobs:
       with:
         name: rca-report
         path: rca_output.txt
+        retention-days: 30
+
+    - name: 💬 Comment RCA on PR
+      if: failure() && github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const rcaReport = fs.readFileSync('rca_output.txt', 'utf8');
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## RCA Analysis Report\n\n\`\`\`\n${rcaReport}\n\`\`\``
+          });
+
+    - name: ✅ Build Success
+      if: success()
+      run: echo "Pipeline completed successfully!"
+
