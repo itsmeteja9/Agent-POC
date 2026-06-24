@@ -22,7 +22,6 @@ jobs:
 
     - name: ❌ Simulate Pipeline Failure
       id: build
-      continue-on-error: true
       run: |
         echo "[Pipeline] Start build" > logs.txt
         echo "[Pipeline] Running tests" >> logs.txt
@@ -50,7 +49,7 @@ jobs:
 
     - name: 💬 Comment RCA on PR
       if: failure() && github.event_name == 'pull_request'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');

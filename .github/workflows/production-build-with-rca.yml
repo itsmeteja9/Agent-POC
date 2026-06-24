@@ -33,7 +33,6 @@ jobs:
 
     - name: 🧪 Run tests
       id: tests
-      continue-on-error: true
       run: |
         echo "[Test Suite] Starting tests..." >> build.log
         # pytest tests/ -v --tb=short >> build.log 2>&1 || echo "Tests failed"
