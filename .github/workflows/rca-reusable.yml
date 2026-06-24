@@ -17,6 +17,10 @@ on:
         required: false
         default: "build-logs"
         type: string
+      caller_run_id:
+        description: "Workflow run ID from the caller workflow"
+        required: true
+        type: number
       artifact_name:
         description: "Artifact name for the RCA report"
         required: false
@@ -39,7 +43,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.log_artifact_name }}
-          run-id: ${{ github.run_id }}
+          run-id: ${{ inputs.caller_run_id }}
           path: .
 
       - name: Checkout RCA tool repository
