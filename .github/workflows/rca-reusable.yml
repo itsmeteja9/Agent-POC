@@ -12,6 +12,11 @@ on:
         required: false
         default: "logs.txt"
         type: string
+      log_artifact_name:
+        description: "Name of the artifact containing build logs"
+        required: false
+        default: "build-logs"
+        type: string
       artifact_name:
         description: "Artifact name for the RCA report"
         required: false
@@ -29,6 +34,12 @@ jobs:
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v4
+
+      - name: Download build logs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.log_artifact_name }}
+          path: .
 
       - name: Checkout RCA tool repository
         uses: actions/checkout@v4
