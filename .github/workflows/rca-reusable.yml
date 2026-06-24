@@ -1,0 +1,53 @@
+name: RCA Reusable Workflow
+
+on:
+  workflow_call:
+    inputs:
+      tool_repo:
+        description: "GitHub repository containing the central RCA tool code"
+        required: true
+        type: string
+      log_file:
+        description: "Path to the log file to analyze"
+        required: false
+        default: "logs.txt"
+        type: string
+      artifact_name:
+        description: "Artifact name for the RCA report"
+        required: false
+        default: "rca-report"
+        type: string
+      python_version:
+        description: "Python version to use for RCA analysis"
+        required: false
+        default: "3.10"
+        type: string
+
+jobs:
+  rca:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+
+      - name: Checkout RCA tool repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.tool_repo }}
+          path: rca-tool
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Run RCA analysis
+        run: |
+          python rca-tool/rca/run_rca.py --log-file "${{ inputs.log_file }}" | tee rca_output.txt
+
+      - name: Upload RCA report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: rca_output.txt
+          retention-days: 30

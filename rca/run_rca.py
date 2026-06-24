@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 import os
@@ -5,8 +6,15 @@ from rca_engine import run_rca
 
 def main():
     """Main entry point for RCA analysis."""
-    log_file = "logs.txt"
+    parser = argparse.ArgumentParser(description="Run RCA analysis on a log file.")
+    parser.add_argument(
+        "--log-file",
+        default="logs.txt",
+        help="Path to the log file to analyze. Defaults to logs.txt.",
+    )
+    args = parser.parse_args()
     
+    log_file = args.log_file
     if not os.path.exists(log_file):
         print(f"Error: {log_file} not found")
         sys.exit(1)
@@ -30,7 +38,6 @@ def main():
         print(json.dumps(results, indent=2))
         print("\n" + "="*50)
         
-        # Exit with appropriate code based on confidence
         sys.exit(0)
         
     except Exception as e:

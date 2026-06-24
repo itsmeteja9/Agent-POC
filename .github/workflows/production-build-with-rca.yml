@@ -34,19 +34,23 @@ jobs:
     - name: 🧪 Run tests
       id: tests
       run: |
+        set -o pipefail
         echo "[Test Suite] Starting tests..." >> build.log
-        # pytest tests/ -v --tb=short >> build.log 2>&1 || echo "Tests failed"
+        pytest tests/ -v --tb=short >> build.log 2>&1
         echo "[Test Suite] Test run completed" >> build.log
-        # Fail intentionally to demonstrate RCA
-        echo "ERROR: Some tests failed" >> build.log
-        exit 1
 
     - name: 🔨 Build application
       id: build
       if: success()
       run: |
         echo "[Build] Starting build process..." >> build.log
-        # python setup.py build >> build.log 2>&1
+        if [ -f setup.py ]; then
+          python setup.py build >> build.log 2>&1
+        elif [ -f pyproject.toml ]; then
+          python -m build >> build.log 2>&1
+        else
+          echo "No build script found; skipping build." >> build.log
+        fi
         echo "[Build] Build completed successfully" >> build.log
 
     - name: 📊 Collect logs before RCA
