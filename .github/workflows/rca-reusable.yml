@@ -39,6 +39,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.log_artifact_name }}
+          run-id: ${{ github.run_id }}
           path: .
 
       - name: Checkout RCA tool repository
